@@ -95,9 +95,9 @@ export const INITIAL_SAMPLES: SamplePrompt[] = [
   {
     id: 'sample-1',
     category: 'Innovation',
-    title: 'The Kokoro Breakthrough',
+    title: 'The Vocalis Breakthrough',
     voice: 'af_heart',
-    text: 'Kokoro is an extraordinary open-weight text-to-speech model. Packing 82 million parameters, it delivers audio quality comparable to models ten times its size, with remarkably fluid pacing and natural resonance.',
+    text: 'Vocalis is an extraordinary neural text-to-speech engine. Delivering studio audio quality with remarkably fluid pacing, human cadence, and natural resonance.',
   },
   {
     id: 'sample-2',

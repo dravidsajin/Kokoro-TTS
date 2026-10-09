@@ -116,8 +116,8 @@ export const AudioPlayerCard: React.FC<AudioPlayerCardProps> = ({
     if (!audioSrc) return;
     const a = document.createElement('a');
     a.href = audioSrc;
-    const cleanName = (textTranscript.slice(0, 24).replace(/[^a-zA-Z0-9]/g, '_') || 'kokoro_speech').toLowerCase();
-    a.download = `kokoro_${currentAudio?.voice || 'voice'}_${cleanName}.wav`;
+    const cleanName = (textTranscript.slice(0, 24).replace(/[^a-zA-Z0-9]/g, '_') || 'vocalis_speech').toLowerCase();
+    a.download = `vocalis_${currentAudio?.voice || 'voice'}_${cleanName}.wav`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

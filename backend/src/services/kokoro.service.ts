@@ -381,14 +381,17 @@ export class KokoroTTSService {
   /**
    * Intelligently chunks text into manageable segments for natural synthesis
    */
-  private splitTextIntoChunks(text: string, maxChunkLength: number = 280): string[] {
+  private splitTextIntoChunks(text: string, maxChunkLength: number = 180): string[] {
     const cleaned = text.replace(/\r\n/g, '\n').trim();
-    if (cleaned.length <= maxChunkLength) {
+    if (!cleaned) return [];
+
+    // Split on sentence boundaries: (.!?\n)
+    const sentences = cleaned.match(/[^.!?\n]+[.!?\n]*/g)?.map((s) => s.trim()).filter(Boolean) || [cleaned];
+
+    if (sentences.length <= 1 && cleaned.length <= maxChunkLength) {
       return [cleaned];
     }
 
-    // Split on sentence boundaries
-    const sentences = cleaned.match(/[^.!?\n]+[.!?\n]*/g) || [cleaned];
     const chunks: string[] = [];
     let currentChunk = '';
 
@@ -396,32 +399,13 @@ export class KokoroTTSService {
       const sentence = rawSentence.trim();
       if (!sentence) continue;
 
-      if ((currentChunk + ' ' + sentence).trim().length <= maxChunkLength) {
-        currentChunk = (currentChunk + ' ' + sentence).trim();
+      if (!currentChunk) {
+        currentChunk = sentence;
+      } else if ((currentChunk + ' ' + sentence).length <= maxChunkLength) {
+        currentChunk = currentChunk + ' ' + sentence;
       } else {
-        if (currentChunk) {
-          chunks.push(currentChunk);
-          currentChunk = '';
-        }
-
-        // If a single sentence exceeds maxChunkLength, split by commas or semicolons
-        if (sentence.length > maxChunkLength) {
-          const subClauses = sentence.split(/([,;:]\s+)/);
-          let subChunk = '';
-          for (const clause of subClauses) {
-            if ((subChunk + clause).length <= maxChunkLength) {
-              subChunk += clause;
-            } else {
-              if (subChunk.trim()) chunks.push(subChunk.trim());
-              subChunk = clause;
-            }
-          }
-          if (subChunk.trim()) {
-            currentChunk = subChunk.trim();
-          }
-        } else {
-          currentChunk = sentence;
-        }
+        chunks.push(currentChunk);
+        currentChunk = sentence;
       }
     }
 
@@ -524,6 +508,15 @@ export class KokoroTTSService {
 
     for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i];
+      const chunkStartPercent = 12 + Math.round((i / totalChunks) * 78);
+      onProgress?.({
+        stage: 'synthesizing',
+        currentChunk: i + 1,
+        totalChunks,
+        percent: chunkStartPercent,
+        chunkText: chunk.length > 55 ? chunk.slice(0, 52) + '...' : chunk,
+      });
+
       const generated = await this.ttsModel.generate(chunk, {
         voice: validVoiceId,
         speed: clampedSpeed,
@@ -537,14 +530,14 @@ export class KokoroTTSService {
         audioChunks.push(generated.audio);
       }
 
-      // Report: chunk complete — progress from 10% to 90% across chunks
-      const chunkPercent = 10 + Math.round(((i + 1) / totalChunks) * 80);
+      // Report: chunk complete — progress up to 90%
+      const chunkPercent = 12 + Math.round(((i + 1) / totalChunks) * 78);
       onProgress?.({
         stage: 'synthesizing',
         currentChunk: i + 1,
         totalChunks,
         percent: chunkPercent,
-        chunkText: chunk.length > 60 ? chunk.slice(0, 57) + '...' : chunk,
+        chunkText: totalChunks > 1 ? `Segment ${i + 1} of ${totalChunks} ready` : 'Segment ready',
       });
     }
 

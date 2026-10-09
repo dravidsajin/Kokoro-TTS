@@ -12,8 +12,8 @@ import { INITIAL_VOICES, INITIAL_SAMPLES } from '../lib/constants';
 import { VoiceMetadata, SamplePrompt, SynthesizeResponse, HistoryItem, BackendHealth, SynthesisProgress } from '../types/tts';
 import { AlertCircle, X, Sparkles, Volume2 } from 'lucide-react';
 
-const STORAGE_KEY_HISTORY = 'kokoro_tts_history_v1';
-const STORAGE_KEY_THEME = 'kokoro_tts_theme_v1';
+const STORAGE_KEY_HISTORY = 'vocalis_tts_history_v1';
+const STORAGE_KEY_THEME = 'vocalis_tts_theme_v1';
 
 export default function Home() {
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
@@ -22,7 +22,7 @@ export default function Home() {
   const [health, setHealth] = useState<BackendHealth | null>(null);
 
   const [text, setText] = useState<string>(
-    'Kokoro is an extraordinary open-weight text-to-speech model. Packing 82 million parameters, it delivers audio quality comparable to models ten times its size, with remarkably fluid pacing and natural resonance.'
+    'Vocalis is an extraordinary neural text-to-speech engine. Delivering studio audio quality with remarkably fluid pacing, human cadence, and natural resonance.'
   );
   const [selectedVoiceId, setSelectedVoiceId] = useState<string>('af_heart');
   const [speed, setSpeed] = useState<number>(1.0);
@@ -172,7 +172,7 @@ export default function Home() {
     setPreviewingVoiceId(voice.id);
 
     try {
-      const sampleText = voice.previewSampleText || `Hello, I am ${voice.name}. This is Kokoro speech synthesis.`;
+      const sampleText = voice.previewSampleText || `Hello, I am ${voice.name}. This is Vocalis neural speech synthesis.`;
       const result = await synthesize(sampleText, voice.id, 1.0);
       const audio = new Audio(`data:audio/wav;base64,${result.audioBase64}`);
       audio.onended = () => setPreviewingVoiceId(null);
@@ -245,7 +245,7 @@ export default function Home() {
               </div>
               <h2 className="hero-title">
                 Studio-Grade Text to Speech with{' '}
-                <span className="text-gradient">Vocalis & Kokoro-82M</span>
+                <span className="text-gradient">Vocalis AI</span>
               </h2>
               <p className="hero-desc">
                 Transform written words into nuanced, natural human voices. Powered by quantized ONNX neural weights and 24kHz studio audio.
@@ -326,7 +326,7 @@ export default function Home() {
             <strong>Vocalis AI Studio</strong> • Full-Stack Next.js & Node.js TypeScript Architecture
           </div>
           <div>
-            Kokoro-82M ONNX & Hugging Face Transformers.js
+            Neural ONNX Architecture & 24kHz Studio Audio
           </div>
         </div>
       </footer>

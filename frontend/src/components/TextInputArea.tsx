@@ -41,6 +41,7 @@ export const TextInputArea: React.FC<TextInputAreaProps> = ({
   onSelectSample,
 }) => {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [displayPercent, setDisplayPercent] = React.useState(0);
 
   // Automatically reset immediate submission state once loading completes or errors
   React.useEffect(() => {
@@ -50,6 +51,47 @@ export const TextInputArea: React.FC<TextInputAreaProps> = ({
   }, [isLoading]);
 
   const isGenerating = isLoading || isSubmitting;
+
+  // Smooth client-side progress interpolation ticker
+  React.useEffect(() => {
+    if (!isGenerating) {
+      if (displayPercent > 0) {
+        const timeout = setTimeout(() => setDisplayPercent(0), 400);
+        return () => clearTimeout(timeout);
+      }
+      return;
+    }
+
+    // Set initial minimum progress as soon as generation starts
+    setDisplayPercent((prev) => (prev === 0 ? 12 : prev));
+
+    const interval = setInterval(() => {
+      setDisplayPercent((current) => {
+        // If server reported completion or cache
+        if (progress?.percent === 100 || progress?.stage === 'done') {
+          return 100;
+        }
+
+        const serverTarget = progress?.percent ?? 15;
+
+        // If server target is ahead of display, smoothly accelerate toward it
+        if (serverTarget > current) {
+          const step = Math.max(1, Math.round((serverTarget - current) * 0.35));
+          return Math.min(serverTarget, current + step);
+        }
+
+        // While server is processing a chunk, smoothly creep forward up to 88%
+        if (current < 88) {
+          return current + 1;
+        }
+
+        return current;
+      });
+    }, 110);
+
+    return () => clearInterval(interval);
+  }, [isGenerating, progress?.percent, progress?.stage, displayPercent]);
+
   const charCount = text.length;
   const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
   const estimatedSeconds = wordCount > 0 ? Math.max(1, Math.round(wordCount / (2.5 * speed))) : 0;
@@ -57,6 +99,7 @@ export const TextInputArea: React.FC<TextInputAreaProps> = ({
   const handleGenerateClick = () => {
     if (isGenerating || !text.trim()) return;
     setIsSubmitting(true);
+    setDisplayPercent(12);
     onSynthesize();
   };
 
@@ -143,7 +186,7 @@ export const TextInputArea: React.FC<TextInputAreaProps> = ({
           value={text}
           onChange={(e) => onChangeText(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Enter text to synthesize into lifelike speech with Kokoro AI... (Press ⌘+Enter to generate)"
+          placeholder="Enter text to synthesize into lifelike speech with Vocalis AI... (Press ⌘+Enter to generate)"
           className="prompt-textarea"
         />
 
@@ -241,9 +284,7 @@ export const TextInputArea: React.FC<TextInputAreaProps> = ({
           <>
             <Loader2 size={16} className="spin-icon" />
             <span>
-              {progress && typeof progress.percent === 'number' && progress.percent > 0
-                ? `Synthesizing... ${progress.percent}%`
-                : 'Synthesizing Speech...'}
+              {displayPercent > 0 ? `Synthesizing... ${displayPercent}%` : 'Synthesizing Speech...'}
             </span>
           </>
         ) : (
@@ -262,33 +303,39 @@ export const TextInputArea: React.FC<TextInputAreaProps> = ({
             <div className="progress-stage-info">
               <span className="progress-pulse-dot" />
               <span className="progress-stage-title">
-                {progress?.stage === 'preparing' && 'Initializing Kokoro Neural Engine'}
+                {progress?.stage === 'cached' && 'Instant Retrieval (Audio Cached)'}
+                {progress?.stage === 'preparing' && 'Initializing Vocalis Neural Engine'}
                 {progress?.stage === 'synthesizing' && (
                   progress.totalChunks > 1
                     ? `Processing Segment ${progress.currentChunk} of ${progress.totalChunks}`
-                    : 'Synthesizing Audio Stream'
+                    : 'Synthesizing Neural Speech'
                 )}
                 {progress?.stage === 'finalizing' && 'Stitching & Mastering 24kHz WAV'}
-                {progress?.stage === 'cached' && 'Instant Retrieval (Audio Cached)'}
-                {progress?.stage === 'done' && 'Generation Complete'}
-                {(!progress?.stage || !['preparing', 'synthesizing', 'finalizing', 'cached', 'done'].includes(progress.stage)) && 'Synthesizing Speech...'}
+                {progress?.stage === 'done' && 'Generation Complete!'}
+                {(!progress?.stage || !['preparing', 'synthesizing', 'finalizing', 'cached', 'done'].includes(progress.stage)) && (
+                  displayPercent < 25
+                    ? 'Initializing Neural Engine'
+                    : displayPercent < 90
+                    ? 'Synthesizing Speech...'
+                    : 'Mastering Audio Output'
+                )}
               </span>
             </div>
             <span className="progress-percent-val">
-              {Math.min(100, Math.max(0, progress?.percent ?? 8))}%
+              {Math.min(100, Math.max(0, displayPercent))}%
             </span>
           </div>
 
           <div
             className="progress-track"
             role="progressbar"
-            aria-valuenow={progress?.percent ?? 8}
+            aria-valuenow={displayPercent}
             aria-valuemin={0}
             aria-valuemax={100}
           >
             <div
               className="progress-fill"
-              style={{ width: `${Math.min(100, Math.max(6, progress?.percent ?? 8))}%` }}
+              style={{ width: `${Math.min(100, Math.max(6, displayPercent))}%` }}
             >
               <div className="progress-shimmer" />
             </div>
@@ -296,7 +343,13 @@ export const TextInputArea: React.FC<TextInputAreaProps> = ({
 
           <div className="progress-footer">
             <span className="progress-detail-text">
-              {progress?.chunkText || 'Allocating model weights and tokenizing phonemes...'}
+              {progress?.chunkText || (
+                displayPercent < 25
+                  ? 'Tokenizing phonemes & loading acoustic weights...'
+                  : displayPercent < 90
+                  ? 'Generating neural audio waveforms...'
+                  : 'Encoding 24kHz studio WAV format...'
+              )}
             </span>
             {progress && progress.totalChunks > 1 && (
               <span className="progress-chunk-badge">

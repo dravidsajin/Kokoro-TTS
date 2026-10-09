@@ -3,8 +3,8 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'Vocalis AI Studio | Neural Text to Speech AI',
-  description: 'Production-ready full-stack Text-to-Speech application powered by Vocalis AI, Kokoro-82M neural model, Next.js, and Node.js TypeScript.',
-  keywords: ['Vocalis AI', 'Kokoro TTS', 'Text to Speech', 'AI Voice', 'Neural Speech', 'Next.js', 'Node.js', 'TypeScript', 'ONNX'],
+  description: 'Production-ready full-stack Text-to-Speech application powered by Vocalis AI neural speech architecture, Next.js, and Node.js TypeScript.',
+  keywords: ['Vocalis AI', 'Text to Speech', 'AI Voice', 'Neural Speech', 'Next.js', 'Node.js', 'TypeScript', 'ONNX'],
   authors: [{ name: 'Vocalis AI Studio' }],
 };
 

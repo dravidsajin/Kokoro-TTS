@@ -59,13 +59,13 @@ export const VoiceSelectorModal: React.FC<VoiceSelectorModalProps> = ({
           <div>
             <div className="modal-title-row">
               <Sparkles size={18} color="#a855f7" />
-              <h2>Select Kokoro Neural Voice</h2>
+              <h2>Select Neural Voice</h2>
               <span className="badge-neural">
                 {voices.length} Available
               </span>
             </div>
             <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '3px' }}>
-              82M open-weight architecture for human-level prosody and tone
+              Studio neural architecture for human-level prosody and tone
             </p>
           </div>
           <button

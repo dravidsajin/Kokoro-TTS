@@ -144,13 +144,24 @@ ttsRouter.post('/tts/synthesize-stream', async (req: Request, res: Response) => 
       'Cache-Control': 'no-cache, no-transform',
       'Connection': 'keep-alive',
       'X-Accel-Buffering': 'no',
+      'Content-Encoding': 'none',
     });
+
+    if (typeof res.flushHeaders === 'function') {
+      res.flushHeaders();
+    }
 
     const sendEvent = (data: any) => {
       if (!res.writableEnded) {
         res.write(`data: ${JSON.stringify(data)}\n\n`);
+        if (typeof (res as any).flush === 'function') {
+          (res as any).flush();
+        }
       }
     };
+
+    // Immediate ping to force socket transmission
+    res.write(': connected\n\n');
 
     // Initial event
     sendEvent({
@@ -158,7 +169,7 @@ ttsRouter.post('/tts/synthesize-stream', async (req: Request, res: Response) => 
       stage: 'preparing',
       currentChunk: 0,
       totalChunks: 0,
-      percent: 5,
+      percent: 8,
       chunkText: 'Initializing synthesis...',
     });
 

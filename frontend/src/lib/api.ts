@@ -103,9 +103,9 @@ export async function synthesizeWithProgress(
   onProgress?: (progress: SynthesisProgress) => void
 ): Promise<SynthesizeResponse> {
   const endpoints = [
-    typeof window !== 'undefined' ? `${REWRITE_API_URL}/tts/synthesize-stream` : null,
     `${PRIMARY_API_URL}/tts/synthesize-stream`,
     `http://127.0.0.1:5001/api/tts/synthesize-stream`,
+    typeof window !== 'undefined' ? `${REWRITE_API_URL}/tts/synthesize-stream` : null,
   ].filter(Boolean) as string[];
 
   let streamError: Error | null = null;

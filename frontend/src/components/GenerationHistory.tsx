@@ -29,7 +29,7 @@ export const GenerationHistory: React.FC<GenerationHistoryProps> = ({
     const a = document.createElement('a');
     a.href = `data:audio/wav;base64,${item.audioBase64}`;
     const cleanName = (item.text.slice(0, 20).replace(/[^a-zA-Z0-9]/g, '_') || 'audio').toLowerCase();
-    a.download = `kokoro_${item.voiceId}_${cleanName}.wav`;
+    a.download = `vocalis_${item.voiceId}_${cleanName}.wav`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

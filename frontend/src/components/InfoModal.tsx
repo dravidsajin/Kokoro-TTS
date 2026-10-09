@@ -27,7 +27,7 @@ export const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose }) => {
             <div>
               <h2>System Architecture & Specs</h2>
               <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                Vocalis AI • Kokoro-82M Neural Speech Engine
+                Vocalis AI • Neural Speech Engine
               </p>
             </div>
           </div>
@@ -46,10 +46,10 @@ export const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose }) => {
           <div style={{ padding: '16px', borderRadius: '12px', background: 'var(--bg-input)', border: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#c084fc' }}>
               <Zap size={13} color="#06b6d4" />
-              <span>Kokoro-82M TTS Neural Architecture</span>
+              <span>Vocalis Neural Speech Architecture</span>
             </div>
             <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-              Kokoro is an open weight 82-million parameter Text-to-Speech model delivering human-like prosody, cadence, and inflection comparable to models tenfold its size.
+              Vocalis is an advanced high-performance Text-to-Speech engine delivering human-like prosody, cadence, and inflection.
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', paddingTop: '6px' }}>
               <div className="metric-tile">
