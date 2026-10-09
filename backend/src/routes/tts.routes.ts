@@ -134,6 +134,76 @@ ttsRouter.post('/tts/synthesize', async (req: Request, res: Response) => {
   }
 });
 
+// POST /api/tts/synthesize-stream (Server-Sent Events stream with granular progress)
+ttsRouter.post('/tts/synthesize-stream', async (req: Request, res: Response) => {
+  try {
+    const validated = synthesizeSchema.parse(req.body);
+
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache, no-transform',
+      'Connection': 'keep-alive',
+      'X-Accel-Buffering': 'no',
+    });
+
+    const sendEvent = (data: any) => {
+      if (!res.writableEnded) {
+        res.write(`data: ${JSON.stringify(data)}\n\n`);
+      }
+    };
+
+    // Initial event
+    sendEvent({
+      type: 'progress',
+      stage: 'preparing',
+      currentChunk: 0,
+      totalChunks: 0,
+      percent: 5,
+      chunkText: 'Initializing synthesis...',
+    });
+
+    const result = await kokoroTTS.synthesizeWithProgress(
+      validated.text,
+      validated.voice,
+      validated.speed,
+      (progress) => {
+        sendEvent({
+          type: 'progress',
+          ...progress,
+        });
+      }
+    );
+
+    sendEvent({
+      type: 'result',
+      data: result,
+    });
+    res.end();
+  } catch (err: any) {
+    if (res.headersSent) {
+      if (!res.writableEnded) {
+        res.write(`data: ${JSON.stringify({ type: 'error', error: err?.message || 'Synthesis failed' })}\n\n`);
+        res.end();
+      }
+    } else {
+      if (err instanceof z.ZodError) {
+        res.status(400).json({
+          success: false,
+          error: 'Validation Error',
+          details: err.issues,
+        });
+        return;
+      }
+
+      console.error('[TTS Stream Route Error]', err);
+      res.status(500).json({
+        success: false,
+        error: err?.message || 'Speech synthesis failed',
+      });
+    }
+  }
+});
+
 // POST or GET /api/tts/raw (Binary audio stream)
 ttsRouter.all('/tts/raw', async (req: Request, res: Response) => {
   try {

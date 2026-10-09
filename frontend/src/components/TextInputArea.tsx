@@ -11,7 +11,7 @@ import {
   Sparkles,
   Loader2,
 } from 'lucide-react';
-import { VoiceMetadata, SamplePrompt } from '../types/tts';
+import { VoiceMetadata, SamplePrompt, SynthesisProgress } from '../types/tts';
 
 interface TextInputAreaProps {
   text: string;
@@ -22,6 +22,7 @@ interface TextInputAreaProps {
   onOpenVoiceModal: () => void;
   onSynthesize: () => void;
   isLoading: boolean;
+  progress?: SynthesisProgress | null;
   samples: SamplePrompt[];
   onSelectSample: (sample: SamplePrompt) => void;
 }
@@ -35,6 +36,7 @@ export const TextInputArea: React.FC<TextInputAreaProps> = ({
   onOpenVoiceModal,
   onSynthesize,
   isLoading,
+  progress,
   samples,
   onSelectSample,
 }) => {
@@ -233,12 +235,16 @@ export const TextInputArea: React.FC<TextInputAreaProps> = ({
         type="button"
         onClick={handleGenerateClick}
         disabled={isGenerating || !text.trim()}
-        className="btn-generate-main"
+        className={`btn-generate-main ${isGenerating ? 'is-generating' : ''}`}
       >
         {isGenerating ? (
           <>
             <Loader2 size={16} className="spin-icon" />
-            <span>Synthesizing Speech...</span>
+            <span>
+              {progress && typeof progress.percent === 'number' && progress.percent > 0
+                ? `Synthesizing... ${progress.percent}%`
+                : 'Synthesizing Speech...'}
+            </span>
           </>
         ) : (
           <>
@@ -248,6 +254,58 @@ export const TextInputArea: React.FC<TextInputAreaProps> = ({
           </>
         )}
       </button>
+
+      {/* Real-time Generation Progress Bar */}
+      {isGenerating && (
+        <div className="synthesis-progress-card animate-fade-in">
+          <div className="progress-header">
+            <div className="progress-stage-info">
+              <span className="progress-pulse-dot" />
+              <span className="progress-stage-title">
+                {progress?.stage === 'preparing' && 'Initializing Kokoro Neural Engine'}
+                {progress?.stage === 'synthesizing' && (
+                  progress.totalChunks > 1
+                    ? `Processing Segment ${progress.currentChunk} of ${progress.totalChunks}`
+                    : 'Synthesizing Audio Stream'
+                )}
+                {progress?.stage === 'finalizing' && 'Stitching & Mastering 24kHz WAV'}
+                {progress?.stage === 'cached' && 'Instant Retrieval (Audio Cached)'}
+                {progress?.stage === 'done' && 'Generation Complete'}
+                {(!progress?.stage || !['preparing', 'synthesizing', 'finalizing', 'cached', 'done'].includes(progress.stage)) && 'Synthesizing Speech...'}
+              </span>
+            </div>
+            <span className="progress-percent-val">
+              {Math.min(100, Math.max(0, progress?.percent ?? 8))}%
+            </span>
+          </div>
+
+          <div
+            className="progress-track"
+            role="progressbar"
+            aria-valuenow={progress?.percent ?? 8}
+            aria-valuemin={0}
+            aria-valuemax={100}
+          >
+            <div
+              className="progress-fill"
+              style={{ width: `${Math.min(100, Math.max(6, progress?.percent ?? 8))}%` }}
+            >
+              <div className="progress-shimmer" />
+            </div>
+          </div>
+
+          <div className="progress-footer">
+            <span className="progress-detail-text">
+              {progress?.chunkText || 'Allocating model weights and tokenizing phonemes...'}
+            </span>
+            {progress && progress.totalChunks > 1 && (
+              <span className="progress-chunk-badge">
+                Chunk {progress.currentChunk}/{progress.totalChunks}
+              </span>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

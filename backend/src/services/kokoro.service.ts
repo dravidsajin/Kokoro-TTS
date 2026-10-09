@@ -440,6 +440,25 @@ export class KokoroTTSService {
     voiceId: string = config.defaultVoice,
     speed: number = config.defaultSpeed
   ): Promise<SynthesizeResult> {
+    return this.synthesizeWithProgress(rawText, voiceId, speed);
+  }
+
+  /**
+   * Synthesizes text to speech with real-time progress reporting.
+   * The onProgress callback is invoked after each sentence chunk completes.
+   */
+  public async synthesizeWithProgress(
+    rawText: string,
+    voiceId: string = config.defaultVoice,
+    speed: number = config.defaultSpeed,
+    onProgress?: (event: {
+      stage: string;
+      currentChunk: number;
+      totalChunks: number;
+      percent: number;
+      chunkText: string;
+    }) => void
+  ): Promise<SynthesizeResult> {
     const text = rawText.trim();
     if (!text) {
       throw new Error('Text to synthesize cannot be empty.');
@@ -457,6 +476,13 @@ export class KokoroTTSService {
     // Check cache
     const cachedEntry = audioCache.get(text, validVoiceId, clampedSpeed);
     if (cachedEntry) {
+      onProgress?.({
+        stage: 'cached',
+        currentChunk: 1,
+        totalChunks: 1,
+        percent: 100,
+        chunkText: text.slice(0, 60),
+      });
       return {
         audioBase64: cachedEntry.buffer.toString('base64'),
         format: 'wav',
@@ -470,14 +496,34 @@ export class KokoroTTSService {
       };
     }
 
+    // Report: preparing
+    onProgress?.({
+      stage: 'preparing',
+      currentChunk: 0,
+      totalChunks: 0,
+      percent: 5,
+      chunkText: 'Loading model & preparing text...',
+    });
+
     await this.initialize();
 
     const startTime = performance.now();
     const chunks = this.splitTextIntoChunks(text);
     const audioChunks: Float32Array[] = [];
     let samplingRate = 24000;
+    const totalChunks = chunks.length;
 
-    for (const chunk of chunks) {
+    // Report: chunking complete
+    onProgress?.({
+      stage: 'synthesizing',
+      currentChunk: 0,
+      totalChunks,
+      percent: 10,
+      chunkText: `Synthesizing ${totalChunks} segment${totalChunks > 1 ? 's' : ''}...`,
+    });
+
+    for (let i = 0; i < chunks.length; i++) {
+      const chunk = chunks[i];
       const generated = await this.ttsModel.generate(chunk, {
         voice: validVoiceId,
         speed: clampedSpeed,
@@ -490,7 +536,26 @@ export class KokoroTTSService {
       if (generated?.audio) {
         audioChunks.push(generated.audio);
       }
+
+      // Report: chunk complete — progress from 10% to 90% across chunks
+      const chunkPercent = 10 + Math.round(((i + 1) / totalChunks) * 80);
+      onProgress?.({
+        stage: 'synthesizing',
+        currentChunk: i + 1,
+        totalChunks,
+        percent: chunkPercent,
+        chunkText: chunk.length > 60 ? chunk.slice(0, 57) + '...' : chunk,
+      });
     }
+
+    // Report: finalizing
+    onProgress?.({
+      stage: 'finalizing',
+      currentChunk: totalChunks,
+      totalChunks,
+      percent: 95,
+      chunkText: 'Stitching audio & encoding WAV...',
+    });
 
     const mergedSamples = concatenateAudioChunks(audioChunks, samplingRate, 0.12);
     const durationSeconds = +(mergedSamples.length / samplingRate).toFixed(2);
@@ -500,6 +565,15 @@ export class KokoroTTSService {
     // Save to cache
     audioCache.set(text, validVoiceId, clampedSpeed, wavBuffer, durationSeconds, samplingRate);
     this.totalGenerations++;
+
+    // Report: done
+    onProgress?.({
+      stage: 'done',
+      currentChunk: totalChunks,
+      totalChunks,
+      percent: 100,
+      chunkText: `Completed in ${elapsedMs}ms`,
+    });
 
     return {
       audioBase64: wavBuffer.toString('base64'),

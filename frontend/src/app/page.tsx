@@ -7,9 +7,9 @@ import { AudioPlayerCard } from '../components/AudioPlayerCard';
 import { GenerationHistory } from '../components/GenerationHistory';
 import { VoiceSelectorModal } from '../components/VoiceSelectorModal';
 import { InfoModal } from '../components/InfoModal';
-import { getVoices, getSamples, getHealth, synthesize } from '../lib/api';
+import { getVoices, getSamples, getHealth, synthesize, synthesizeWithProgress } from '../lib/api';
 import { INITIAL_VOICES, INITIAL_SAMPLES } from '../lib/constants';
-import { VoiceMetadata, SamplePrompt, SynthesizeResponse, HistoryItem, BackendHealth } from '../types/tts';
+import { VoiceMetadata, SamplePrompt, SynthesizeResponse, HistoryItem, BackendHealth, SynthesisProgress } from '../types/tts';
 import { AlertCircle, X, Sparkles, Volume2 } from 'lucide-react';
 
 const STORAGE_KEY_HISTORY = 'kokoro_tts_history_v1';
@@ -28,6 +28,7 @@ export default function Home() {
   const [speed, setSpeed] = useState<number>(1.0);
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [synthesisProgress, setSynthesisProgress] = useState<SynthesisProgress | null>(null);
   const [currentAudio, setCurrentAudio] = useState<SynthesizeResponse | null>(null);
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -119,9 +120,23 @@ export default function Home() {
 
     setIsLoading(true);
     setErrorMessage(null);
+    setSynthesisProgress({
+      stage: 'preparing',
+      currentChunk: 0,
+      totalChunks: 0,
+      percent: 5,
+      chunkText: 'Initializing synthesis...',
+    });
 
     try {
-      const result = await synthesize(text.trim(), selectedVoiceId, speed);
+      const result = await synthesizeWithProgress(
+        text.trim(),
+        selectedVoiceId,
+        speed,
+        (progress) => {
+          setSynthesisProgress(progress);
+        }
+      );
       setCurrentAudio(result);
 
       const newItem: HistoryItem = {
@@ -148,6 +163,7 @@ export default function Home() {
       setErrorMessage(err.message || 'Speech generation failed. Please check backend connection.');
     } finally {
       setIsLoading(false);
+      setSynthesisProgress(null);
     }
   }, [text, selectedVoiceId, speed, isLoading, selectedVoice]);
 
@@ -279,6 +295,7 @@ export default function Home() {
               onOpenVoiceModal={() => setIsVoiceModalOpen(true)}
               onSynthesize={handleSynthesize}
               isLoading={isLoading}
+              progress={synthesisProgress}
               samples={samples}
               onSelectSample={handleSelectSample}
             />

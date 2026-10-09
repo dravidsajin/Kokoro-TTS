@@ -67,3 +67,11 @@ export interface BackendHealth {
     hitRate: string;
   };
 }
+
+export interface SynthesisProgress {
+  stage: 'preparing' | 'synthesizing' | 'finalizing' | 'done' | 'cached' | string;
+  currentChunk: number;
+  totalChunks: number;
+  percent: number;
+  chunkText: string;
+}
