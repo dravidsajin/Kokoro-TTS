@@ -1,44 +1,28 @@
-# 🎙️ Kokoro TTS Studio — Full-Stack Neural Text-to-Speech
+# 🎙️ Vocalis AI Studio — Full-Stack Neural Text-to-Speech
 
-A production-ready, high-performance Text-to-Speech (TTS) application powered by the state-of-the-art **Kokoro-82M v1.0** neural model, featuring a **Next.js** frontend with custom obsidian/violet glassmorphism and an optimized **Node.js & TypeScript** ONNX runtime microservice.
+A production-ready, high-performance Text-to-Speech (TTS) application powered by the state-of-the-art quantized neural ONNX speech model, featuring a **Next.js 16** frontend with custom obsidian glassmorphism and an optimized **Node.js & TypeScript** microservice.
 
 ---
 
 ## 🌟 Key Highlights
 
-- **🧠 Kokoro-82M Neural Model**: Frontier 82-million parameter TTS model providing natural prosody, human-like cadence, and 24kHz studio-grade audio.
-- **⚡ High-Throughput Node.js Microservice**: TypeScript backend utilizing `onnxruntime-node` with Q8 quantization for fast CPU neural inference.
+- **🧠 Neural ONNX Speech Engine**: Frontier 82-million parameter architecture providing natural prosody, human-like cadence, and 24kHz studio-grade audio.
+- **⚡ High-Throughput Node.js Microservice**: TypeScript backend with Q8 quantization for blazing CPU neural inference.
+- **🔄 Real-Time Streaming Progress**: Server-Sent Events (SSE) protocol delivering live sentence-by-sentence progress feedback with animated progress bar.
 - **🌊 Real-time Web Audio API Spectrum Visualizer**: Dynamic HTML5 Canvas audio spectrum analyzer that animates live frequency bars during speech playback.
 - **🗃️ SHA-256 LRU Audio Caching**: Repeated sentences synthesize in **~1ms** with zero neural inference overhead.
 - **✂️ Intelligent Sentence Chunking**: Seamlessly splits long paragraphs into natural clauses and stitches audio buffers with acoustic pause padding.
-- **🎭 28 Expressive Voices**: Full catalog across American and British accents with quality grading (Grade A, A-, B+, etc.), gender classification, and trait tags.
-- **🎨 Bespoke Obsidian & Violet Studio Theming**: Dark mode with radiant glow accents and glassmorphism, plus an Alpine Studio light mode toggle.
+- **🎭 28 Expressive Voices**: Full catalog across American and British accents with quality grading (Grade A, B+), gender classification, and trait tags.
+- **🎨 Bespoke Obsidian & Cyan Studio Theming**: Dark mode with radiant glow accents and glassmorphism, plus an Alpine Studio light mode toggle.
 - **📦 Generation Library**: Client-side history drawer with instant playback, WAV download, and persistence.
 
 ---
 
 ## 🏗️ Architecture
 
-```
-┌────────────────────────────────────────────────────────┐
-│               Next.js 15+ Frontend                     │
-│  - App Router & TypeScript                             │
-│  - Studio Obsidian & Alpine Light Theming              │
-│  - Web Audio API Canvas Spectrum Visualizer            │
-│  - Interactive Voice Explorer (28 Voices)              │
-│  - Timeline Seekbar, Volume & Speed Controls           │
-│  - Client-Side Generation History (LocalStorage)       │
-└──────────────────────────┬─────────────────────────────┘
-                           │ HTTP / Rewrites (/api/backend/*)
-┌──────────────────────────▼─────────────────────────────┐
-│           Node.js & TypeScript Backend (Port 5001)     │
-│  - Express REST API + Helmet + CORS + Zod Validation   │
-│  - KokoroTTSService (Singleton with Async Warmup)      │
-│  - ONNX Runtime Engine (onnx-community/Kokoro-82M-v1.0)│
-│  - Sentence & Clause Chunker + WAV Buffer Concatenator │
-│  - SHA-256 LRU Audio Memory Cache                      │
-└────────────────────────────────────────────────────────┘
-```
+![Vocalis AI Studio Architecture](architecture-diagram.svg)
+
+> 📖 **Full Architectural Specification**: See [ARCHITECTURE.md](ARCHITECTURE.md) for sequence diagrams, component breakdowns, and deep-dive technical specs.
 
 ---
 
